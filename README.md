@@ -1,4 +1,4 @@
-# ForceAD Team Warboard
+# BordAD
 
 Internal alternative board for a ForceAD attack-defense game. It works as an external HTTP client: reads the public ForceAD board API, accepts team flags locally, submits them to ForceAD in batches, and highlights attack/defense focus areas from scoreboard statistics.
 
