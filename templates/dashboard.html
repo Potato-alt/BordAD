@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="10">
+  <title>ForceAD Team Warboard</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+    body { margin: 0; background: #090d14; color: #e8eef8; }
+    header { padding: 22px 28px; background: linear-gradient(135deg, #111827, #172554); border-bottom: 1px solid #26344d; }
+    h1 { margin: 0 0 6px; font-size: 28px; }
+    h2 { margin: 0 0 12px; font-size: 18px; color: #bfdbfe; }
+    main { padding: 22px; display: grid; gap: 18px; }
+    section { background: #101827; border: 1px solid #223049; border-radius: 14px; padding: 16px; box-shadow: 0 12px 38px rgb(0 0 0 / 25%); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .card { background: #0b1220; border: 1px solid #1f2a44; border-radius: 12px; padding: 14px; }
+    .metric { font-size: 30px; font-weight: 800; }
+    .muted { color: #94a3b8; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid #1f2a44; vertical-align: top; }
+    th { color: #93c5fd; font-weight: 700; }
+    textarea, input { width: 100%; box-sizing: border-box; border: 1px solid #334155; border-radius: 10px; background: #070b12; color: #e8eef8; padding: 10px; }
+    textarea { min-height: 120px; resize: vertical; }
+    button { border: 0; border-radius: 10px; padding: 10px 16px; background: #2563eb; color: white; font-weight: 700; cursor: pointer; }
+    .form-row { display: grid; grid-template-columns: 1fr 160px; gap: 10px; margin-top: 10px; }
+    .ok { color: #86efac; }
+    .bad { color: #fca5a5; }
+    .warn { color: #fde68a; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #172554; color: #bfdbfe; font-size: 12px; }
+    @media (max-width: 720px) { .form-row { grid-template-columns: 1fr; } header, main { padding-left: 14px; padding-right: 14px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ForceAD Team Warboard</h1>
+    <div class="muted">Source: {{ settings.forcead_base_url }} · our team id: {{ settings.our_team_id }} · auto-refresh 10s</div>
+  </header>
+  <main>
+    {% if summary.last_poll_error or summary.last_submit_error %}
+      <section>
+        <h2>Warnings</h2>
+        {% if summary.last_poll_error %}<div class="bad">{{ summary.last_poll_error }}</div>{% endif %}
+        {% if summary.last_submit_error %}<div class="warn">{{ summary.last_submit_error }}</div>{% endif %}
+      </section>
+    {% endif %}
+
+    <section>
+      <h2>Flag Queue</h2>
+      <div class="grid">
+        <div class="card"><div class="metric">{{ summary.queued }}</div><div class="muted">queued</div></div>
+        <div class="card"><div class="metric">{{ summary.submitting }}</div><div class="muted">submitting</div></div>
+        <div class="card"><div class="metric ok">{{ summary.accepted }}</div><div class="muted">accepted</div></div>
+        <div class="card"><div class="metric bad">{{ summary.rejected }}</div><div class="muted">rejected</div></div>
+        <div class="card"><div class="metric warn">{{ summary.error }}</div><div class="muted">error</div></div>
+      </div>
+      <form method="post" action="/submit" style="margin-top: 14px;">
+        <textarea name="flags_text" placeholder="Paste flags here, one per line or any text containing [A-Z0-9]{31}="></textarea>
+        <div class="form-row">
+          <input name="source" value="manual" placeholder="source">
+          <button type="submit">Queue Flags</button>
+        </div>
+      </form>
+    </section>
+
+    <section>
+      <h2>Attack Focus</h2>
+      <table>
+        <thead><tr><th>Priority</th><th>Team</th><th>Service</th><th>Lost Δ</th><th>Total lost</th><th>Status</th><th>Why</th></tr></thead>
+        <tbody>
+          {% for row in attack %}
+            <tr>
+              <td><strong>{{ row.priority }}</strong></td>
+              <td>{{ row.team_name }}</td>
+              <td>{{ row.task_name }}</td>
+              <td class="bad">+{{ row.lost_delta }}</td>
+              <td>{{ row.lost }}</td>
+              <td><span class="pill">{{ status_names.get(row.status, row.status) }}</span></td>
+              <td class="muted">{{ row.teams_losing }} teams losing this service{% if row.status == 101 %}, service is UP{% endif %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Defense Focus</h2>
+      <table>
+        <thead><tr><th>Priority</th><th>Service</th><th>Lost Δ</th><th>Our lost</th><th>Status</th><th>Why</th></tr></thead>
+        <tbody>
+          {% for row in defense %}
+            <tr>
+              <td><strong>{{ row.priority }}</strong></td>
+              <td>{{ row.task_name }}</td>
+              <td class="bad">+{{ row.lost_delta }}</td>
+              <td>{{ row.lost }}</td>
+              <td><span class="pill">{{ status_names.get(row.status, row.status) }}</span></td>
+              <td class="muted">external total lost: {{ row.external_total_lost }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Recent Flags</h2>
+      <table>
+        <thead><tr><th>Flag</th><th>Source</th><th>Status</th><th>Response</th></tr></thead>
+        <tbody>
+          {% for row in recent_flags %}
+            <tr>
+              <td><code>{{ row.flag }}</code></td>
+              <td>{{ row.source }}</td>
+              <td class="{% if row.status == 'accepted' %}ok{% elif row.status in ['rejected', 'error'] %}bad{% else %}warn{% endif %}">{{ row.status }}</td>
+              <td class="muted">{{ row.response_msg }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Service Matrix</h2>
+      <table>
+        <thead><tr><th>Service</th><th>Team</th><th>Round</th><th>Status</th><th>Lost</th><th>Stolen</th><th>Checks</th></tr></thead>
+        <tbody>
+          {% for row in matrix[:200] %}
+            <tr>
+              <td>{{ row.task_name }}</td>
+              <td>{{ row.team_name }}</td>
+              <td>{{ row.round }}</td>
+              <td><span class="pill">{{ status_names.get(row.status, row.status) }}</span></td>
+              <td>{{ row.lost }}</td>
+              <td>{{ row.stolen }}</td>
+              <td>{{ row.checks_passed }}/{{ row.checks }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>
