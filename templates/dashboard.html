@@ -4,57 +4,116 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="refresh" content="10">
-  <title>ForceAD Team Warboard</title>
+  <title>BordAD</title>
   <style>
-    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
-    body { margin: 0; background: #090d14; color: #e8eef8; }
-    header { padding: 22px 28px; background: linear-gradient(135deg, #111827, #172554); border-bottom: 1px solid #26344d; }
-    h1 { margin: 0 0 6px; font-size: 28px; }
-    h2 { margin: 0 0 12px; font-size: 18px; color: #bfdbfe; }
-    main { padding: 22px; display: grid; gap: 18px; }
-    section { background: #101827; border: 1px solid #223049; border-radius: 14px; padding: 16px; box-shadow: 0 12px 38px rgb(0 0 0 / 25%); }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-    .card { background: #0b1220; border: 1px solid #1f2a44; border-radius: 12px; padding: 14px; }
-    .metric { font-size: 30px; font-weight: 800; }
-    .muted { color: #94a3b8; font-size: 13px; }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid #1f2a44; vertical-align: top; }
-    th { color: #93c5fd; font-weight: 700; }
-    textarea, input { width: 100%; box-sizing: border-box; border: 1px solid #334155; border-radius: 10px; background: #070b12; color: #e8eef8; padding: 10px; }
-    textarea { min-height: 120px; resize: vertical; }
-    button { border: 0; border-radius: 10px; padding: 10px 16px; background: #2563eb; color: white; font-weight: 700; cursor: pointer; }
-    .form-row { display: grid; grid-template-columns: 1fr 160px; gap: 10px; margin-top: 10px; }
-    .ok { color: #86efac; }
-    .bad { color: #fca5a5; }
-    .warn { color: #fde68a; }
-    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #172554; color: #bfdbfe; font-size: 12px; }
-    @media (max-width: 720px) { .form-row { grid-template-columns: 1fr; } header, main { padding-left: 14px; padding-right: 14px; } }
+    html, body { min-height: 100%; margin: 0; background: #fff; color: #151515; }
+    body { font-family: Merriweather, Georgia, serif; }
+    a { color: inherit; }
+    .topbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 1em; min-height: 3.5em; padding: 0 1em; background: #bbbbbb55; overflow: hidden; border-bottom: 1px solid #c6cad1; }
+    .progress-bar { position: absolute; inset: 0 auto 0 0; width: 72%; background: #00ff00; opacity: .45; }
+    .topbar > *:not(.progress-bar) { position: relative; z-index: 1; }
+    .brand { font-size: 1.25em; font-weight: 700; }
+    .meta { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 1em; font-size: .9em; }
+    .container { margin: 2em 4em 3em; }
+    .intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 1em; margin-bottom: 1.5em; }
+    h1 { margin: 0; font-size: 2em; }
+    h2 { margin: 0 0 .75em; font-size: 1.25em; }
+    .muted { color: #5f6875; font-size: .88em; }
+    .panel { margin-bottom: 2em; }
+    .warnings { border: 1px solid #c6cad1; padding: 1em; background: #ffffcc; }
+    .queue-grid { display: grid; grid-template-columns: repeat(5, minmax(8em, 1fr)); border: 1px solid #c6cad1; border-bottom: 0; }
+    .queue-cell { min-height: 5em; padding: .9em; border-bottom: 1px solid #c6cad1; border-right: 1px solid #c6cad1; display: flex; flex-flow: column nowrap; justify-content: center; text-align: center; }
+    .queue-cell:last-child { border-right: 0; }
+    .metric { font-size: 2.1em; font-weight: 700; line-height: 1; }
+    .ok-bg { background: #7dfc74; }
+    .bad-bg { background: #ff5b5b; }
+    .warn-bg { background: #ffff00; }
+    .plain-bg { background: #fff; }
+    .blue-bg { background: #5191ff; }
+    .form-box { border: 1px solid #c6cad1; border-top: 0; padding: 1em; background: #f8f8f8; }
+    textarea, input { width: 100%; box-sizing: border-box; border: 1px solid #c6cad1; background: #fff; color: #151515; padding: .75em; font: inherit; }
+    textarea { min-height: 8em; resize: vertical; }
+    button { border: 1px solid #999; border-radius: .3em; padding: .75em 1.1em; background: #eee; color: #151515; font: inherit; cursor: pointer; }
+    button:hover { background: #e0e0e0; }
+    .form-row { display: grid; grid-template-columns: 1fr 12em; gap: .75em; margin-top: .75em; }
+    .score-table { display: flex; flex-flow: column nowrap; }
+    .score-row { display: flex; flex-flow: row nowrap; text-align: center; border-top: 1px solid #c6cad1; border-left: 1px solid #c6cad1; border-right: 1px solid #c6cad1; }
+    .score-row:last-child .service-cell { border-bottom: 1px solid #c6cad1; }
+    .score-row:last-child .team-group > * { border-bottom: 1px solid #c6cad1; }
+    .score-head { font-weight: 700; }
+    .score-head > * { min-height: 3em; }
+    .team-group { flex: 7 1 20%; display: flex; flex-flow: row nowrap; }
+    .rank { flex: 1 1 0; display: flex; align-items: center; justify-content: center; }
+    .team-cell { flex: 4 1 15%; display: flex; flex-flow: column nowrap; justify-content: center; padding: .5em; text-align: left; }
+    .score-cell { flex: 2 1 5%; display: flex; align-items: center; justify-content: center; padding: .5em; }
+    .services { flex: 20 2 0; display: flex; flex-flow: row nowrap; border-left: 1px solid #c6cad1; }
+    .services > :not(:last-child) { border-right: 1px solid #c6cad1; }
+    .service-cell { flex: 1 1 0; min-height: 6em; display: flex; flex-flow: column nowrap; justify-content: center; gap: .25em; padding: .55em; position: relative; }
+    .service-title { min-height: 3em; }
+    .team-name { font-weight: 700; }
+    .team-id { color: #6b7280; font-size: .85em; }
+    .top-1 { background: #ffdf00; }
+    .top-2 { background: #c0c0c0; }
+    .top-3 { background: #d3983f; }
+    .status-101 { background: #7dfc74; }
+    .status-102 { background: #5191ff; }
+    .status-103 { background: #ff9114; }
+    .status-104 { background: #ff5b5b; }
+    .status-110 { background: #ffff00; }
+    .status--1 { background: #fa83fc; }
+    .service-stat { text-align: left; font-size: .9em; }
+    .tables { display: grid; grid-template-columns: 1fr 1fr; gap: 2em; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: .65em .55em; border: 1px solid #c6cad1; vertical-align: top; }
+    th { background: #eeeeee; }
+    code { background: #000; color: #00ff00; padding: .1em .25em; }
+    .pill { display: inline-block; padding: .15em .5em; border: 1px solid #999; border-radius: .3em; background: #fff; white-space: nowrap; }
+    .status-text-accepted { color: #118500; font-weight: 700; }
+    .status-text-rejected, .status-text-error { color: #b00000; font-weight: 700; }
+    .status-text-queued, .status-text-submitting { color: #9b7b00; font-weight: 700; }
+    .flag-table { font-size: .9em; }
+    .response { max-width: 42em; overflow-wrap: anywhere; }
+    @media (max-width: 1100px) { .container { margin: 1.25em; } .tables { grid-template-columns: 1fr; } .score-row { min-width: 980px; } .score-table-wrap { overflow-x: auto; } }
+    @media (max-width: 720px) { .topbar, .intro { align-items: flex-start; flex-direction: column; padding: 1em; } .meta { justify-content: flex-start; } .queue-grid { grid-template-columns: 1fr 1fr; } .form-row { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
-  <header>
-    <h1>ForceAD Team Warboard</h1>
-    <div class="muted">Source: {{ settings.forcead_base_url }} · our team id: {{ settings.our_team_id }} · auto-refresh 10s</div>
-  </header>
-  <main>
+  <div class="topbar">
+    <div class="progress-bar"></div>
+    <div class="brand">BordAD / ForceAD</div>
+    <div class="meta">
+      <span>Board: {{ settings.forcead_base_url }}</span>
+      <span>Team: #{{ settings.our_team_id }}</span>
+      <span>Refresh: 10s</span>
+    </div>
+  </div>
+
+  <main class="container">
+    <div class="intro">
+      <div>
+        <h1>Team Warboard</h1>
+        <div class="muted">External ForceAD client with local flag queue, submit history, and attack/defense focus.</div>
+      </div>
+    </div>
+
     {% if summary.last_poll_error or summary.last_submit_error %}
-      <section>
+      <section class="panel warnings">
         <h2>Warnings</h2>
-        {% if summary.last_poll_error %}<div class="bad">{{ summary.last_poll_error }}</div>{% endif %}
-        {% if summary.last_submit_error %}<div class="warn">{{ summary.last_submit_error }}</div>{% endif %}
+        {% if summary.last_poll_error %}<div>{{ summary.last_poll_error }}</div>{% endif %}
+        {% if summary.last_submit_error %}<div>{{ summary.last_submit_error }}</div>{% endif %}
       </section>
     {% endif %}
 
-    <section>
+    <section class="panel">
       <h2>Flag Queue</h2>
-      <div class="grid">
-        <div class="card"><div class="metric">{{ summary.queued }}</div><div class="muted">queued</div></div>
-        <div class="card"><div class="metric">{{ summary.submitting }}</div><div class="muted">submitting</div></div>
-        <div class="card"><div class="metric ok">{{ summary.accepted }}</div><div class="muted">accepted</div></div>
-        <div class="card"><div class="metric bad">{{ summary.rejected }}</div><div class="muted">rejected</div></div>
-        <div class="card"><div class="metric warn">{{ summary.error }}</div><div class="muted">error</div></div>
+      <div class="queue-grid">
+        <div class="queue-cell plain-bg"><div class="metric">{{ summary.queued }}</div><div class="muted">queued</div></div>
+        <div class="queue-cell blue-bg"><div class="metric">{{ summary.submitting }}</div><div class="muted">submitting</div></div>
+        <div class="queue-cell ok-bg"><div class="metric">{{ summary.accepted }}</div><div class="muted">accepted</div></div>
+        <div class="queue-cell bad-bg"><div class="metric">{{ summary.rejected }}</div><div class="muted">rejected</div></div>
+        <div class="queue-cell warn-bg"><div class="metric">{{ summary.error }}</div><div class="muted">error</div></div>
       </div>
-      <form method="post" action="/submit" style="margin-top: 14px;">
+      <form class="form-box" method="post" action="/submit">
         <textarea name="flags_text" placeholder="Paste flags here, one per line or any text containing [A-Z0-9]{31}="></textarea>
         <div class="form-row">
           <input name="source" value="manual" placeholder="source">
@@ -63,76 +122,102 @@
       </form>
     </section>
 
-    <section>
-      <h2>Attack Focus</h2>
-      <table>
-        <thead><tr><th>Priority</th><th>Team</th><th>Service</th><th>Lost Δ</th><th>Total lost</th><th>Status</th><th>Why</th></tr></thead>
-        <tbody>
-          {% for row in attack %}
-            <tr>
-              <td><strong>{{ row.priority }}</strong></td>
-              <td>{{ row.team_name }}</td>
-              <td>{{ row.task_name }}</td>
-              <td class="bad">+{{ row.lost_delta }}</td>
-              <td>{{ row.lost }}</td>
-              <td><span class="pill">{{ status_names.get(row.status, row.status) }}</span></td>
-              <td class="muted">{{ row.teams_losing }} teams losing this service{% if row.status == 101 %}, service is UP{% endif %}</td>
-            </tr>
+    <section class="panel">
+      <h2>Scoreboard</h2>
+      <div class="score-table-wrap">
+        <div class="score-table">
+          <div class="score-row score-head">
+            <div class="team-group">
+              <div class="rank">#</div>
+              <div class="team-cell">team</div>
+              <div class="score-cell">score</div>
+            </div>
+            <div class="services">
+              {% for task in score_tasks %}
+                <div class="service-cell service-title">{{ task.name }}</div>
+              {% endfor %}
+            </div>
+          </div>
+          {% for team in score_rows %}
+            <div class="score-row">
+              <div class="team-group {% if loop.index == 1 %}top-1{% elif loop.index == 2 %}top-2{% elif loop.index == 3 %}top-3{% endif %}">
+                <div class="rank">{{ loop.index }}</div>
+                <div class="team-cell">
+                  <div class="team-name">{{ team.name }}</div>
+                  <div class="team-id">team #{{ team.id }}</div>
+                </div>
+                <div class="score-cell">{{ "%.2f"|format(team.score) }}</div>
+              </div>
+              <div class="services">
+                {% for task in score_tasks %}
+                  {% set svc = team.services.get(task.id) %}
+                  {% if svc %}
+                    <div class="service-cell status-{{ svc.status }}">
+                      <div class="service-stat"><strong>SLA</strong>: {% if svc.checks %}{{ "%.2f"|format((svc.checks_passed / svc.checks) * 100) }}{% else %}0.00{% endif %}%</div>
+                      <div class="service-stat"><strong>FP</strong>: {{ "%.2f"|format(svc.score) }}</div>
+                      <div class="service-stat"><strong>Flags</strong>: +{{ svc.stolen }}/-{{ svc.lost }}</div>
+                      <div class="muted">{{ status_names.get(svc.status, svc.status) }}</div>
+                    </div>
+                  {% else %}
+                    <div class="service-cell status--1">OFFLINE</div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
           {% endfor %}
-        </tbody>
-      </table>
+        </div>
+      </div>
     </section>
 
-    <section>
-      <h2>Defense Focus</h2>
-      <table>
-        <thead><tr><th>Priority</th><th>Service</th><th>Lost Δ</th><th>Our lost</th><th>Status</th><th>Why</th></tr></thead>
-        <tbody>
-          {% for row in defense %}
-            <tr>
-              <td><strong>{{ row.priority }}</strong></td>
-              <td>{{ row.task_name }}</td>
-              <td class="bad">+{{ row.lost_delta }}</td>
-              <td>{{ row.lost }}</td>
-              <td><span class="pill">{{ status_names.get(row.status, row.status) }}</span></td>
-              <td class="muted">external total lost: {{ row.external_total_lost }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </section>
+    <div class="tables">
+      <section class="panel">
+        <h2>Attack Focus</h2>
+        <table>
+          <thead><tr><th>Priority</th><th>Team</th><th>Service</th><th>Lost</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for row in attack %}
+              <tr>
+                <td><strong>{{ row.priority }}</strong></td>
+                <td>{{ row.team_name }}</td>
+                <td>{{ row.task_name }}</td>
+                <td>+{{ row.lost_delta }} / {{ row.lost }}</td>
+                <td><span class="pill">{{ status_names.get(row.status, row.status) }}</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
 
-    <section>
+      <section class="panel">
+        <h2>Defense Focus</h2>
+        <table>
+          <thead><tr><th>Priority</th><th>Service</th><th>Lost</th><th>Status</th><th>Heat</th></tr></thead>
+          <tbody>
+            {% for row in defense %}
+              <tr>
+                <td><strong>{{ row.priority }}</strong></td>
+                <td>{{ row.task_name }}</td>
+                <td>+{{ row.lost_delta }} / {{ row.lost }}</td>
+                <td><span class="pill">{{ status_names.get(row.status, row.status) }}</span></td>
+                <td>{{ row.external_total_lost }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <section class="panel">
       <h2>Recent Flags</h2>
-      <table>
+      <table class="flag-table">
         <thead><tr><th>Flag</th><th>Source</th><th>Status</th><th>Response</th></tr></thead>
         <tbody>
           {% for row in recent_flags %}
             <tr>
               <td><code>{{ row.flag }}</code></td>
               <td>{{ row.source }}</td>
-              <td class="{% if row.status == 'accepted' %}ok{% elif row.status in ['rejected', 'error'] %}bad{% else %}warn{% endif %}">{{ row.status }}</td>
-              <td class="muted">{{ row.response_msg }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </section>
-
-    <section>
-      <h2>Service Matrix</h2>
-      <table>
-        <thead><tr><th>Service</th><th>Team</th><th>Round</th><th>Status</th><th>Lost</th><th>Stolen</th><th>Checks</th></tr></thead>
-        <tbody>
-          {% for row in matrix[:200] %}
-            <tr>
-              <td>{{ row.task_name }}</td>
-              <td>{{ row.team_name }}</td>
-              <td>{{ row.round }}</td>
-              <td><span class="pill">{{ status_names.get(row.status, row.status) }}</span></td>
-              <td>{{ row.lost }}</td>
-              <td>{{ row.stolen }}</td>
-              <td>{{ row.checks_passed }}/{{ row.checks }}</td>
+              <td class="status-text-{{ row.status }}">{{ row.status }}</td>
+              <td class="muted response">{{ row.response_msg }}</td>
             </tr>
           {% endfor %}
         </tbody>

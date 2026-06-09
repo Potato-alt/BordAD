@@ -79,6 +79,25 @@ async def dashboard(request: Request):
     defense = analyzer.get_defense_recommendations(db, settings.our_team_id)
     recent_flags = analyzer.get_recent_flags(db)
     matrix = analyzer.get_service_matrix(db)
+    score_tasks = sorted(
+        {int(row["task_id"]): {"id": int(row["task_id"]), "name": row["task_name"]} for row in matrix}.values(),
+        key=lambda task: task["name"],
+    )
+    score_team_map = {}
+    for row in matrix:
+        team_id = int(row["team_id"])
+        team = score_team_map.setdefault(
+            team_id,
+            {
+                "id": team_id,
+                "name": row["team_name"],
+                "score": 0.0,
+                "services": {},
+            },
+        )
+        team["score"] += float(row["score"])
+        team["services"][int(row["task_id"])] = row
+    score_rows = sorted(score_team_map.values(), key=lambda row: row["score"], reverse=True)
     return templates.TemplateResponse(
         "dashboard.html",
         {
@@ -89,6 +108,8 @@ async def dashboard(request: Request):
             "defense": defense,
             "recent_flags": recent_flags,
             "matrix": matrix,
+            "score_tasks": score_tasks,
+            "score_rows": score_rows,
             "status_names": analyzer.STATUS_NAMES,
         },
     )

@@ -27,6 +27,8 @@ APP_TOKEN=shared-token-for-tools
 OUR_TEAM_ID=1
 ```
 
+The app loads `.env` automatically on startup.
+
 Run locally:
 
 ```bash
